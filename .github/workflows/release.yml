@@ -83,8 +83,34 @@ jobs:
       # CREATE RELEASE
       # =========================
       - name: Create GitHub Release
+        id: create_release
         uses: softprops/action-gh-release@v2
         with:
           files: FrameCoreEngine-Windows.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # =========================
+      # NOTIFY DISCORD
+      # =========================
+      - name: Notify Discord
+        if: success()
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $repo = "${{ github.repository }}"
+          $releaseUrl = "https://github.com/$repo/releases/tag/$tag"
+
+          $body = @{
+            username   = "FrameCore Engine"
+            embeds     = @(
+              @{
+                title       = "Nueva release: $tag"
+                url         = $releaseUrl
+                description = "Ya está disponible una nueva versión de FrameCore Engine. Mirá el changelog completo en el link."
+                color       = 5814783
+              }
+            )
+          } | ConvertTo-Json -Depth 5
+
+          Invoke-RestMethod -Uri "${{ secrets.DISCORD_WEBHOOK }}" -Method Post -Body $body -ContentType "application/json"
