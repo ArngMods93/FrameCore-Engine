@@ -2,6 +2,8 @@ package states;
 
 import backend.WeekData;
 
+import flixel.addons.display.FlxBackdrop;
+import flixel.addons.display.FlxGridOverlay;
 import flixel.input.keyboard.FlxKey;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.graphics.frames.FlxFrame;
@@ -116,6 +118,7 @@ class TitleState extends MusicBeatState
 	var danceLeft:Bool = false;
 	var titleText:FlxSprite;
 	var swagShader:ColorSwap = null;
+	var titleGrid:FlxBackdrop;
 
 	function startIntro()
 	{
@@ -181,6 +184,12 @@ class TitleState extends MusicBeatState
 		titleText.animation.play('idle');
 		titleText.updateHitbox();
 
+		// Cuadrícula animada (igual que en NotesColorSubState): arriba del logo/GF, abajo del texto "Press Enter to Begin"
+		titleGrid = new FlxBackdrop(FlxGridOverlay.createGrid(80, 80, 160, 160, true, 0x33FFFFFF, 0x0));
+		titleGrid.velocity.set(40, 40);
+		titleGrid.alpha = 0;
+		FlxTween.tween(titleGrid, {alpha: 1}, 0.5, {ease: FlxEase.quadOut});
+
 		blackScreen = new FlxSprite().makeGraphic(1, 1, FlxColor.BLACK);
 		blackScreen.scale.set(FlxG.width, FlxG.height);
 		blackScreen.updateHitbox();
@@ -199,6 +208,7 @@ class TitleState extends MusicBeatState
 
 		add(gfDance);
 		add(logoBl); //FNF Logo
+		add(titleGrid); //Cuadrícula animada: encima del logo/GF, debajo del texto
 		add(titleText); //"Press Enter to Begin" text
 		add(credGroup);
 		add(ngSpr);

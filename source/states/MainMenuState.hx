@@ -2,6 +2,8 @@ package states;
 
 import flixel.FlxObject;
 import flixel.effects.FlxFlicker;
+import flixel.addons.display.FlxBackdrop;
+import flixel.addons.display.FlxGridOverlay;
 import lime.app.Application;
 import states.editors.MasterEditorMenu;
 import options.OptionsState;
@@ -14,16 +16,16 @@ enum MainMenuColumn {
 
 class MainMenuState extends MusicBeatState
 {
-	public static var psychEngineVersion:String = '1.0.4'; // This is also used for Discord RPC
+	public static var psychEngineVersion:String = '1.0.4';
 	public static var curSelected:Int = 0;
 	public static var curColumn:MainMenuColumn = CENTER;
-	var allowMouse:Bool = true; //Turn this off to block mouse movement in menus
+
+	var allowMouse:Bool = true;
 
 	var menuItems:FlxTypedGroup<FlxSprite>;
 	var leftItem:FlxSprite;
 	var rightItem:FlxSprite;
 
-	//Centered/Text options
 	var optionShit:Array<String> = [
 		'story_mode',
 		'freeplay',
@@ -38,6 +40,7 @@ class MainMenuState extends MusicBeatState
 	var camFollow:FlxObject;
 
 	static var showOutdatedWarning:Bool = true;
+
 	override function create()
 	{
 		super.create();
@@ -48,13 +51,13 @@ class MainMenuState extends MusicBeatState
 		Mods.loadTopMod();
 
 		#if DISCORD_ALLOWED
-		// Updating Discord Rich Presence
 		DiscordClient.changePresence("In the Menus", null);
 		#end
 
 		persistentUpdate = persistentDraw = true;
 
 		var yScroll:Float = 0.25;
+
 		var bg:FlxSprite = new FlxSprite(-80).loadGraphic(Paths.image('menuBG'));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.scrollFactor.set(0, yScroll);
@@ -76,53 +79,59 @@ class MainMenuState extends MusicBeatState
 		magenta.color = 0xFFfd719b;
 		add(magenta);
 
+		// Cuadrícula animada (igual que en NotesColorSubState): arriba del fondo, abajo de los botones del menú
+		var grid:FlxBackdrop = new FlxBackdrop(FlxGridOverlay.createGrid(80, 80, 160, 160, true, 0x33FFFFFF, 0x0));
+		grid.velocity.set(40, 40);
+		grid.alpha = 0;
+		FlxTween.tween(grid, {alpha: 1}, 0.5, {ease: FlxEase.quadOut});
+		add(grid);
+
 		menuItems = new FlxTypedGroup<FlxSprite>();
 		add(menuItems);
 
 		for (num => option in optionShit)
 		{
 			var item:FlxSprite = createMenuItem(option, 0, (num * 140) + 90);
-			item.y += (4 - optionShit.length) * 70; // Offsets for when you have anything other than 4 items
+			item.y += (4 - optionShit.length) * 70;
 			item.screenCenter(X);
 		}
 
 		if (leftOption != null)
 			leftItem = createMenuItem(leftOption, 60, 490);
+
 		if (rightOption != null)
 		{
 			rightItem = createMenuItem(rightOption, FlxG.width - 60, 490);
 			rightItem.x -= rightItem.width;
 		}
 
-		var psychVer:FlxText = new FlxText(12, FlxG.height - 44, 0, "Psych Engine v" + psychEngineVersion, 12);
-		psychVer.scrollFactor.set();
-		psychVer.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		add(psychVer);
-		var fnfVer:FlxText = new FlxText(12, FlxG.height - 24, 0, "Friday Night Funkin' v" + Application.current.meta.get('version'), 12);
+		// 🟣 VERSION TEXT (FRAMECORE + PSYCH JUNTOS)
+		var versionText:FlxText = new FlxText(
+			12,
+			FlxG.height - 44,
+			0,
+			"Psych Engine v" + psychEngineVersion + "\nFrameCore Engine v1.5 (Beta)",
+			12
+		);
+
+		versionText.scrollFactor.set();
+		versionText.setFormat(Paths.font("vcr.ttf"), 16, 0xFFFFFFFF, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		add(versionText);
+
+		// FNF version
+		var fnfVer:FlxText = new FlxText(
+			12,
+			FlxG.height - 14,
+			0,
+			"Friday Night Funkin' v" + Application.current.meta.get('version'),
+			12
+		);
+
 		fnfVer.scrollFactor.set();
-		fnfVer.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		fnfVer.setFormat(Paths.font("vcr.ttf"), 16, 0xFFFFFFFF, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		add(fnfVer);
+
 		changeItem();
-
-		#if ACHIEVEMENTS_ALLOWED
-		// Unlocks "Freaky on a Friday Night" achievement if it's a Friday and between 18:00 PM and 23:59 PM
-		var leDate = Date.now();
-		if (leDate.getDay() == 5 && leDate.getHours() >= 18)
-			Achievements.unlock('friday_night_play');
-
-		#if MODS_ALLOWED
-		Achievements.reloadList();
-		#end
-		#end
-
-		#if CHECK_FOR_UPDATES
-		if (showOutdatedWarning && ClientPrefs.data.checkForUpdates && substates.OutdatedSubState.updateVersion != psychEngineVersion) {
-			persistentUpdate = false;
-			showOutdatedWarning = false;
-			openSubState(new substates.OutdatedSubState());
-		}
-		#end
-
 		FlxG.camera.follow(camFollow, null, 0.15);
 	}
 
@@ -134,16 +143,17 @@ class MainMenuState extends MusicBeatState
 		menuItem.animation.addByPrefix('selected', '$name selected', 24, true);
 		menuItem.animation.play('idle');
 		menuItem.updateHitbox();
-		
+
 		menuItem.antialiasing = ClientPrefs.data.antialiasing;
 		menuItem.scrollFactor.set();
+
 		menuItems.add(menuItem);
 		return menuItem;
 	}
 
 	var selectedSomethin:Bool = false;
-
 	var timeNotMoving:Float = 0;
+
 	override function update(elapsed:Float)
 	{
 		if (FlxG.sound.music.volume < 0.8)

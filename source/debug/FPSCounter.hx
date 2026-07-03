@@ -4,6 +4,7 @@ import flixel.FlxG;
 import openfl.text.TextField;
 import openfl.text.TextFormat;
 import openfl.system.System;
+import openfl.system.Capabilities;
 
 /**
 	The FPS class provides an easy-to-use monitor to display
@@ -22,6 +23,24 @@ class FPSCounter extends TextField
 	public var memoryMegas(get, never):Float;
 
 	@:noCompletion private var times:Array<Float>;
+
+	/**
+		Nombre del engine que se muestra debajo del contador de FPS
+	**/
+	public static var engineName:String = "FrameCore Engine";
+
+	/**
+		Versión del engine que se muestra en el contador de FPS.
+		OJO: se define acá a mano, NO se lee del project.xml,
+		para que siempre coincida con lo que se muestra en el Main Menu.
+	**/
+	public static var engineVersion:String = "1.5";
+
+	/**
+		Texto extra que se le pega al final de la versión, ej: "(Beta)"
+		Dejalo en "" si no querés nada ahí
+	**/
+	public static var engineTag:String = "(Beta)";
 
 	public function new(x:Float = 10, y:Float = 10, color:Int = 0x000000)
 	{
@@ -62,11 +81,36 @@ class FPSCounter extends TextField
 
 	public dynamic function updateText():Void { // so people can override it in hscript
 		text = 'FPS: ${currentFPS}'
-		+ '\nMemory: ${flixel.util.FlxStringUtil.formatBytes(memoryMegas)}';
+		+ '\nMemory: ${flixel.util.FlxStringUtil.formatBytes(memoryMegas)}'
+		+ '\n${getEngineVersionString()}'
+		+ '\nOS: ${getOSString()}';
 
 		textColor = 0xFFFFFFFF;
 		if (currentFPS < FlxG.drawFramerate * 0.5)
 			textColor = 0xFFFF0000;
+	}
+
+	/**
+		Arma el texto "FrameCore Engine v1.0 (Beta)" usando la
+		versión hardcodeada en engineVersion (NO lee project.xml).
+	**/
+	public static function getEngineVersionString():String
+	{
+		var result:String = '${engineName} v${engineVersion}';
+		if (engineTag != null && engineTag.length > 0)
+			result += ' ${engineTag}';
+
+		return result;
+	}
+
+	/**
+		Devuelve el nombre del sistema operativo (ej: "Windows 8.1", "Mac OS X 10.15", "Linux")
+		usando Capabilities.os de OpenFL, que ya trae el detalle de versión en Windows.
+	**/
+	public static function getOSString():String
+	{
+		var os:String = Capabilities.os;
+		return (os != null && os.length > 0) ? os : "Unknown";
 	}
 
 	inline function get_memoryMegas():Float

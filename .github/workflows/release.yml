@@ -1,0 +1,90 @@
+name: FrameCoreEngine Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-windows:
+    name: Build + Release Windows
+    runs-on: windows-latest
+
+    steps:
+      # =========================
+      # CHECKOUT REPO
+      # =========================
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # =========================
+      # SETUP HAXE
+      # =========================
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.7
+
+      # =========================
+      # CACHE HAXELIB
+      # =========================
+      - name: Cache haxelib
+        uses: actions/cache@v4
+        with:
+          path: C:\haxelib
+          key: haxelib-${{ runner.os }}
+
+      # =========================
+      # INSTALL DEPENDENCIES
+      # =========================
+      - name: Install dependencies
+        shell: cmd
+        run: |
+          haxelib setup C:\haxelib
+          haxelib install lime -always
+          haxelib install openfl -always
+          haxelib install flixel -always
+          haxelib install flixel-tools -always
+          haxelib install hxcpp -always
+          haxelib run lime setup -y
+
+      # =========================
+      # OPTIONAL SETUP SCRIPT
+      # =========================
+      - name: Setup project scripts
+        shell: cmd
+        run: |
+          if exist setup\windows.bat call setup\windows.bat
+
+      # =========================
+      # BUILD GAME
+      # =========================
+      - name: Build game
+        shell: cmd
+        run: haxelib run lime build windows -release
+
+      # =========================
+      # ZIP BUILD (SAFE CHECK)
+      # =========================
+      - name: Zip build
+        shell: pwsh
+        run: |
+          $path = "export/release/windows/bin"
+          if (!(Test-Path $path)) {
+            echo "Build folder not found!"
+            dir export/release/windows
+            exit 1
+          }
+          Compress-Archive -Path "$path/*" -DestinationPath FrameCoreEngine-Windows.zip
+
+      # =========================
+      # CREATE RELEASE
+      # =========================
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: FrameCoreEngine-Windows.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

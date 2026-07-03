@@ -74,6 +74,10 @@ class MusicBeatState extends FlxState
 			}
 		}
 
+		#if desktop
+		if(FlxG.keys.justPressed.F11) FlxG.fullscreen = !FlxG.fullscreen;
+		#end
+
 		if(FlxG.save.data != null) FlxG.save.data.fullscreen = FlxG.fullscreen;
 		
 		stagesFunc(function(stage:BaseStage) {

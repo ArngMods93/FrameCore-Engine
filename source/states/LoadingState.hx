@@ -146,7 +146,7 @@ class LoadingState extends MusicBeatState
 		var bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.setGraphicSize(Std.int(FlxG.width));
-		bg.color = 0xFFD16FFF;
+		bg.color = 0xFF00FF66;
 		bg.updateHitbox();
 		addBehindBar(bg);
 	
@@ -257,7 +257,7 @@ class LoadingState extends MusicBeatState
 
 			if(pressedTimes >= 5)
 			{
-				FlxG.camera.fade(0xAAFFFFFF, 0.5, true);
+				FlxG.camera.fade(0xAA00FF66, 0.5, true);
 				logo.visible = false;
 				spawnedPessy = true;
 				stateChangeDelay = 5;
