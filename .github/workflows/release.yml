@@ -65,7 +65,49 @@ jobs:
       # =========================
       - name: Build game
         shell: cmd
-        run: haxelib run lime build windows -release
+        run: haxelib run lime build windows -release -D officialBuild
+
+      # =========================
+      # VERIFY GENERATED ASSETS
+      # =========================
+      - name: Verify generated assets
+        shell: pwsh
+        run: |
+          $assets = "export/release/windows/bin/assets"
+
+          if (!(Test-Path $assets)) {
+            Write-Host "ERROR: Assets folder not found!"
+            exit 1
+          }
+
+          Write-Host ""
+          Write-Host "========================"
+          Write-Host "GENERATED ASSETS"
+          Write-Host "========================"
+
+          Get-ChildItem $assets
+
+          Write-Host ""
+          Write-Host "Checking important folders..."
+
+          foreach ($folder in @(
+            "base_game",
+            "week_assets",
+            "images",
+            "weeks",
+            "songs",
+            "shared",
+            "videos",
+            "fonts",
+            "data",
+            "music"
+          )) {
+            if (Test-Path "$assets/$folder") {
+              Write-Host "[OK] $folder"
+            } else {
+              Write-Host "[MISSING] $folder"
+            }
+          }
 
       # =========================
       # ZIP BUILD (SAFE CHECK)
@@ -74,11 +116,13 @@ jobs:
         shell: pwsh
         run: |
           $path = "export/release/windows/bin"
+
           if (!(Test-Path $path)) {
             echo "Build folder not found!"
             dir export/release/windows
             exit 1
           }
+
           Compress-Archive -Path "$path/*" -DestinationPath FrameCoreEngine-Windows.zip
 
       # =========================
@@ -104,13 +148,13 @@ jobs:
           $releaseUrl = "https://github.com/$repo/releases/tag/$tag"
 
           $body = @{
-            username   = "FrameCore Engine"
-            embeds     = @(
+            username = "FrameCore Engine"
+            embeds = @(
               @{
-                title       = "Nueva release: $tag"
-                url         = $releaseUrl
+                title = "Nueva release: $tag"
+                url = $releaseUrl
                 description = "Ya está disponible una nueva versión de FrameCore Engine. Mirá el changelog completo en el link."
-                color       = 5814783
+                color = 5814783
               }
             )
           } | ConvertTo-Json -Depth 5
