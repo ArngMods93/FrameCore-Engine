@@ -3,7 +3,7 @@
 
 	<app title="Friday Night Funkin': FrameCore Engine" unless="mobile" />
 	<app title="FNF: FrameCore Engine" if="mobile" />
-	
+
 	<app file="FrameCoreEngine"
 	     packageName="com.stefandx.framecoreengine"
 	     package="com.stefandx.framecoreengine"
@@ -18,15 +18,28 @@
 	<app preloader="flixel.system.FlxPreloader" />
 	<set name="SWF_VERSION" value="11.8" />
 
-	<meta permission="android.permission.WRITE_EXTERNAL_STORAGE" if="android" />
-	<meta permission="android.permission.READ_EXTERNAL_STORAGE" if="android" />
-	<meta permission="android.permission.READ_MEDIA_AUDIO" if="android" />
-	<meta permission="android.permission.VIBRATE" if="android" />
+	<section if="android">
+		<permission android:name="android.permission.INTERNET" />
+		<permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+		<permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+		<permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+		<permission android:name="android.permission.READ_MEDIA_AUDIO" />
+		<permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+		<permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+		<permission android:name="android.permission.WAKE_LOCK" />
+		<permission android:name="android.permission.VIBRATE" />
+	</section>
+
+	<config:android minimum-sdk-version="21" />
+	<config:android target-sdk-version="36" />
+	<config:android build-tools-version="36.0.0" />
+
+	<java path="source" if="android" />
 
 	<define name="MODS_ALLOWED" if="desktop || mobile" />
 	<define name="HSCRIPT_ALLOWED" if="desktop || mobile" />
 	<define name="LUA_ALLOWED" if="desktop || mobile" />
-	
+
 	<define name="ACHIEVEMENTS_ALLOWED" />
 	<define name="DISCORD_ALLOWED" if="desktop" />
 	<define name="TRANSLATIONS_ALLOWED" />
@@ -98,6 +111,8 @@
 	<haxelib name="hxdiscord_rpc" version="1.2.4" if="DISCORD_ALLOWED"/>
 	<haxelib name="flxanimate"/>
 
+	<haxedef name="NO_PRECOMPILED_HEADERS" if="linux || android" />
+
 	<haxedef name="FLX_NO_FOCUS_LOST_SCREEN" />
 	<haxedef name="FLX_NO_DEBUG" unless="debug" />
 	<haxedef name="NAPE_RELEASE_BUILD" unless="debug" />
@@ -109,6 +124,9 @@
 
 	<haxeflag name="--macro" value="allowPackage('flash')" />
 	<haxeflag name="--macro" value="include('my.pack')" />
+
+	<compilerflag value="-O3" if="android && !debug" />
+	<compilerflag value="-ffast-math" if="android && !debug" />
 
 	<icon path="art/icons/icon16.png" size='16'/>
 	<icon path="art/icons/icon32.png" size='32'/>
