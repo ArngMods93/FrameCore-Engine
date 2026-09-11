@@ -1,0 +1,57 @@
+name: Build Windows
+
+on:
+  push:
+    branches:
+      - main
+      - experimental
+      - patch-1
+  pull_request:
+    branches:
+      - main
+      - experimental
+      - patch-1
+  workflow_dispatch:
+
+env:
+  HAXE_VERSION: 4.3.6
+
+jobs:
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@master
+        with:
+          haxe-version: ${{ env.HAXE_VERSION }}
+
+      - name: Install Haxe libraries
+        shell: cmd
+        run: setup\windows.bat
+
+      - name: Configure SScript
+        shell: bash
+        run: echo 'oy9:showMacroty8:loopCosti25y10:includeAllfg' >> ~/settings.cocoa
+
+      - name: Build
+        shell: cmd
+        run: haxelib run lime build Project.xml windows -D officialBuild
+
+      - name: Show build output on failure
+        if: failure()
+        shell: cmd
+        run: dir /s export\release\windows\bin
+
+      - name: Upload Windows build
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: FrameCore-Windows
+          path: export/release/windows/bin/**
+          if-no-files-found: error
