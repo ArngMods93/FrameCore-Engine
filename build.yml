@@ -1,0 +1,224 @@
+```yaml
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - experimental
+      - patch-1
+
+  pull_request:
+    branches:
+      - main
+      - experimental
+      - patch-1
+
+  workflow_dispatch:
+
+env:
+  HAXE_VERSION: "4.3.6"
+  JAVA_VERSION: "21"
+  ANDROID_API_LEVEL: "36"
+  ANDROID_BUILD_TOOLS: "36.0.0"
+  ANDROID_NDK_VERSION: "29.0.14206865"
+
+jobs:
+
+  # ============================================================
+  # ANDROID
+  # ============================================================
+
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clean workspace outputs
+        run: |
+          rm -rf export dump .haxelib
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@master
+        with:
+          haxe-version: ${{ env.HAXE_VERSION }}
+
+      - name: Install system packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            build-essential \
+            cmake \
+            clang \
+            g++ \
+            pkg-config \
+            python3 \
+            zlib1g-dev \
+            libssl-dev \
+            libmbedtls-dev \
+            libasound2-dev \
+            libpulse-dev \
+            libopenal-dev \
+            libsndfile1-dev \
+            libsdl2-dev \
+            libx11-dev \
+            libxrandr-dev \
+            libxcursor-dev \
+            libxi-dev \
+            libxinerama-dev \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev \
+            libfreetype6-dev \
+            libharfbuzz-dev \
+            libpng-dev \
+            libjpeg-dev \
+            libudev-dev \
+            libcurl4-openssl-dev \
+            libxkbcommon-dev \
+            wget \
+            git
+
+      - name: Install Haxe libraries
+        run: |
+          chmod +x ./setup/unix.sh
+          ./setup/unix.sh
+
+      - name: Configure SScript
+        run: |
+          echo 'oy9:showMacroty8:loopCosti25y10:includeAllfg' >> ~/settings.cocoa
+
+      - name: Configure Android toolchain
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-${ANDROID_API_LEVEL}" \
+            "build-tools;${ANDROID_BUILD_TOOLS}" \
+            "ndk;${ANDROID_NDK_VERSION}"
+
+          haxelib run lime config ANDROID_SDK "$ANDROID_HOME"
+          haxelib run lime config ANDROID_NDK_ROOT "$ANDROID_HOME/ndk/${ANDROID_NDK_VERSION}"
+          haxelib run lime config JAVA_HOME "$JAVA_HOME"
+          haxelib run lime config ANDROID_SETUP true
+
+      - name: Build Android
+        run: |
+          set -x
+          haxelib run lime build Project.xml android -D officialBuild
+
+      - name: Show generated AndroidManifest.xml on failure
+        if: failure()
+        run: |
+          manifest="export/release/android/bin/app/src/main/AndroidManifest.xml"
+
+          if [ -f "$manifest" ]; then
+            cat "$manifest"
+          else
+            find export/release/android -name "*.xml" 2>/dev/null || true
+          fi
+
+      - name: Upload Android manifest on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-manifest
+          path: export/release/android/bin/app/src/main/AndroidManifest.xml
+          if-no-files-found: ignore
+
+      - name: Upload Android build
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: FrameCore-Android
+          path: |
+            export/release/android/bin/app/build/outputs/apk/**/*.apk
+            export/release/android/bin/**/*.apk
+          if-no-files-found: error
+
+
+  # ============================================================
+  # WINDOWS
+  # ============================================================
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clean workspace outputs
+        shell: cmd
+        run: |
+          if exist export rmdir /s /q export
+          if exist dump rmdir /s /q dump
+          if exist .haxelib rmdir /s /q .haxelib
+
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@master
+        with:
+          haxe-version: ${{ env.HAXE_VERSION }}
+
+      - name: Verify Haxe
+        shell: cmd
+        run: |
+          haxe --version
+          haxelib --version
+          neko --version
+
+      - name: Install Haxe libraries
+        shell: cmd
+        run: |
+          call setup\windows.bat
+
+      - name: Configure SScript
+        shell: pwsh
+        run: |
+          $settings = Join-Path $HOME "settings.cocoa"
+          Add-Content -Path $settings -Value "oy9:showMacroty8:loopCosti25y10:includeAllfg"
+
+      - name: Verify Haxe libraries
+        shell: cmd
+        run: |
+          haxelib list
+
+      - name: Build Windows
+        shell: cmd
+        run: |
+          haxelib run lime build Project.xml windows -D officialBuild
+
+      - name: Show build output on failure
+        if: failure()
+        shell: cmd
+        run: |
+          if exist export\release\windows\bin (
+            dir /s export\release\windows\bin
+          ) else (
+            echo Build output directory was not generated.
+            dir /s export 2>nul
+          )
+
+      - name: Upload Windows build
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: FrameCore-Windows
+          path: export/release/windows/bin/**
+          if-no-files-found: error
+```
