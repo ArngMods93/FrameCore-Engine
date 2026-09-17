@@ -9,7 +9,7 @@
 	     package="com.stefandx.framecoreengine"
 	     main="Main"
 	     version="0.3.0"
-	     company="ArgMods" />
+	     company="StefanDX" />
 
 	<set name="APP_ID" value="0x0100f6c013bbc000" />
 
