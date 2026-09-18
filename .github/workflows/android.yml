@@ -38,6 +38,13 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
+        with:
+          accept-android-sdk-licenses: true
+          packages: |
+            platform-tools
+            platforms;android-${{ env.ANDROID_API_LEVEL }}
+            build-tools;${{ env.ANDROID_BUILD_TOOLS }}
+            ndk;${{ env.ANDROID_NDK_VERSION }}
 
       - name: Setup Haxe
         uses: krdlab/setup-haxe@master
@@ -50,27 +57,24 @@ jobs:
           sh ./setup/unix.sh
 
       - name: Configure SScript
-        run: echo 'oy9:showMacroty8:loopCosti25y10:includeAllfg' >> ~/settings.cocoa
+        run: |
+          echo 'oy9:showMacroty8:loopCosti25y10:includeAllfg' >> ~/settings.cocoa
 
       - name: Configure Android toolchain
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager --install \
-            "platform-tools" \
-            "platforms;android-${ANDROID_API_LEVEL}" \
-            "build-tools;${ANDROID_BUILD_TOOLS}" \
-            "ndk;${ANDROID_NDK_VERSION}"
           haxelib run lime config ANDROID_SDK "$ANDROID_HOME"
           haxelib run lime config ANDROID_NDK_ROOT "$ANDROID_HOME/ndk/${ANDROID_NDK_VERSION}"
           haxelib run lime config JAVA_HOME "$JAVA_HOME"
           haxelib run lime config ANDROID_SETUP true
 
       - name: Build
-        run: haxelib run lime build Project.xml android -D officialBuild
+        run: |
+          haxelib run lime build Project.xml android -D officialBuild
 
       - name: Show build output on failure
         if: failure()
-        run: find export/release/android/bin -type f 2>/dev/null || true
+        run: |
+          find export/release/android/bin -type f 2>/dev/null || true
 
       - name: Upload Android build
         if: success()
