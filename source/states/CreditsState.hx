@@ -39,7 +39,7 @@ class CreditsState extends MusicBeatState
 
 		var defaultList:Array<Array<String>> = [ //Name - Icon name - Description - Link - BG Color
     ["FrameCore Engine Team"],
-    ["StefanDX", "steff", "FrameCore Engine Main Dev", "https://youtube.com/StefanDeluxe93", "C3BAD4"],
+    ["StefanDX", "steff", "FrameCore Engine Main Dev", "https://youtube.com/@StefanDeluxe93", "C3BAD4"],
 
     ["Psych Engine Team"],
     ["Shadow Mario", "shadowmario", "Main Programmer and Head of Psych Engine", "https://ko-fi.com/shadowmario", "444444"],
