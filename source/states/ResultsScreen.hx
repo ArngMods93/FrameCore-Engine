@@ -66,6 +66,9 @@ class ResultsScreen extends MusicBeatState
         bgTop.scale.set(535, FlxG.height);
         bgTop.updateHitbox();
 
+        // Results images:
+        // assets/base_game/shared/images/results_screen/
+
         var cats:FlxSprite = new FlxSprite(-135, 135);
         cats.frames = Paths.getSparrowAtlas(
             'results_screen/ratingsPopin',
@@ -87,7 +90,10 @@ class ResultsScreen extends MusicBeatState
             : game.songMisses;
 
         var hits:Int = game.ratingsData[0].hits + game.ratingsData[1].hits;
-        var breaks:Int = game.ratingsData[2].hits + game.ratingsData[3].hits + misses;
+
+        var breaks:Int = game.ratingsData[2].hits
+            + game.ratingsData[3].hits
+            + misses;
 
         var clearStatus:Int = Math.floor(
             hits / Math.max(hits + breaks, 1) * 100
@@ -202,8 +208,23 @@ class ResultsScreen extends MusicBeatState
                     'base_game/shared'
                 );
 
-                bf.anim.addBySymbol('intro', 'Intro', 24, true, 0, 0);
-                bf.anim.addBySymbol('loop', 'Loop Start', 24, true, 0, 0);
+                bf.anim.addBySymbol(
+                    'intro',
+                    'Intro',
+                    24,
+                    true,
+                    0,
+                    0
+                );
+
+                bf.anim.addBySymbol(
+                    'loop',
+                    'Loop Start',
+                    24,
+                    true,
+                    0,
+                    0
+                );
 
                 bf.anim.onComplete = () ->
                 {
